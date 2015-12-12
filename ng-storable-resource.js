@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('ngStorableResource', ['LocalStorageModule'])
+angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
   .factory('StorableResource', function ($resource) {
 
     return $resource;
