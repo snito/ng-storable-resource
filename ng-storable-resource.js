@@ -81,9 +81,9 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
 
         actions = actions || {};
 
-        var OriginalResourceClass = $resource(url, paramDefaults, actions, options);
+        var ResourceClass = $resource(url, paramDefaults, actions, options);
 
-        angular.extend(OriginalResourceClass.prototype, {
+        angular.extend(ResourceClass.prototype, {
 
           localFetch: function () {
             var equivalent = this.localFindEquivalent();
@@ -94,39 +94,39 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
           localFindEquivalent: function () {
             var equivalentAttributes = this.localFindRawEquivalent();
             if (equivalentAttributes) {
-              return OriginalResourceClass.createModelInsurance(equivalentAttributes);
+              return ResourceClass.createModelInstance(equivalentAttributes);
             }
           },
 
           localFindRawEquivalent: function () {
             var _this = this;
             var thisAttributes = this;
-            var attributesTobeSaved = _.find(OriginalResourceClass.attributesList, function (attributes, i) {
+            var attributesTobeSaved = _.find(ResourceClass.attributesList, function (attributes, i) {
               return (attributes.objectId && attributes.objectId == _this.id) || (attributes.localId && attributes.localId == thisAttributes.localId);
             });
             return attributesTobeSaved;
           },
 
           localIndex: function () {
-            return OriginalResourceClass.attributesList.indexOf(this.localFindRawEquivalent());
+            return ResourceClass.attributesList.indexOf(this.localFindRawEquivalent());
           },
 
-          // next: function () {
-          //   var index = this.localIndex();
-          //   if (index > 0) {
-          //     var attributes = OriginalResourceClass.attributesList[index - 1];
-          //     return OriginalResourceClass.createModelInsurance(attributes);
-          //   }
-          // },
+          next: function () {
+            var index = this.localIndex();
+            if (index > 0) {
+              var attributes = ResourceClass.attributesList[index - 1];
+              return ResourceClass.createModelInstance(attributes);
+            }
+          },
 
-          // prev: function () {
-          //   var index = this.localIndex();
-          //   var attributesList = OriginalResourceClass.attributesList;
-          //   if (index < attributesList.length - 1) {
-          //     var attributes = attributesList[index + 1];
-          //     return OriginalResourceClass.createModelInsurance(attributes);
-          //   }
-          // },
+          prev: function () {
+            var index = this.localIndex();
+            var attributesList = ResourceClass.attributesList;
+            if (index < attributesList.length - 1) {
+              var attributes = attributesList[index + 1];
+              return ResourceClass.createModelInstance(attributes);
+            }
+          },
 
           /**
            *
@@ -135,7 +135,7 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
           saveLocal: function (attributes) {
             if (_.isObject(attributes)) this.extend(this, attributes);
             this._saveLocal();
-            return OriginalResourceClass.write();
+            return ResourceClass.write();
           },
 
           _saveLocal: function () {
@@ -145,15 +145,15 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
               angular.extend(equivalent, this.attributes);
             } else {
               this.localId = Math.random().toString();
-              OriginalResourceClass.attributesList.push(this.attributesForLocal());
+              ResourceClass.attributesList.push(this.attributesForLocal());
             }
 
           },
 
           destroyLocal: function () {
             var index = this.localIndex();
-            OriginalResourceClass.attributesList.splice(index, 1);
-            OriginalResourceClass.write();
+            ResourceClass.attributesList.splice(index, 1);
+            ResourceClass.write();
           },
 
           attributesForLocal: function () {
@@ -171,15 +171,15 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
 
         }, instanceMethods);
 
-        var propNames = [].concat(Object.getOwnPropertyNames(OriginalResourceClass)).concat(Object.getOwnPropertyNames(actions));
+        var propNames = [].concat(Object.getOwnPropertyNames(ResourceClass)).concat(Object.getOwnPropertyNames(actions));
         _.each(propNames, function (propName) {
 
           if ('bind' == propName) return;
 
-          var func = OriginalResourceClass[propName];
+          var func = ResourceClass[propName];
           if (!(func instanceof Function)) return;
 
-          OriginalResourceClass[propName] = function () {
+          ResourceClass[propName] = function () {
 
             var args = Array.prototype.slice.call(arguments);
 
@@ -203,7 +203,7 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
 
         });
 
-        angular.extend(OriginalResourceClass, {
+        angular.extend(ResourceClass, {
 
           initialize: function () {
             this.localInit();
@@ -217,7 +217,7 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
             var _this = this;
             _.each(_attributesList, function (attributes, i) {
 
-              var model = _this.createModelInsurance(angular.copy(attributes));
+              var model = _this.createModelInstance(angular.copy(attributes));
               collection.add(model);
             });
 
@@ -234,14 +234,14 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
             var attributes = _.find(this.attributesList, function (attributes, i) {
               return attributes.localId === localId;
             });
-            return this.createModelInsurance(attributes);
+            return this.createModelInstance(attributes);
           },
 
           localFindById: function (id) {
             var attributes = _.find(this.attributesList, function (attributes, i) {
               return attributes.objectId === id;
             });
-            return this.createModelInsurance(attributes);
+            return this.createModelInstance(attributes);
           },
 
           /**
@@ -301,7 +301,7 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
            *
            * @returns {Object}
            */
-          createModelInsurance: function (attributes) {
+          createModelInstance: function (attributes) {
             attributes = angular.copy(attributes) || {};
             if (attributes.date) {
               attributes.date = new Date(attributes.date);
@@ -342,8 +342,8 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
 
         angular.extend(Collection.prototype, collectionMethods);
 
-        OriginalResourceClass.localInit();
-        return OriginalResourceClass;
+        ResourceClass.localInit();
+        return ResourceClass;
       };
 
 
