@@ -79,7 +79,14 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
 
       var storableResource = function (url, paramDefaults, actions, options, instanceMethods, staticMethods, collectionMethods) {
 
-        actions = actions || {};
+        actions = angular.extend(actions || {}, {
+          update: {
+            method: 'put'
+          },
+          create: {
+            method: 'post'
+          }
+        });
 
         var ResourceClass = $resource(url, paramDefaults, actions, options);
 
@@ -201,8 +208,15 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
               return ret;
             }
           };
-
         });
+
+        ResourceClass.prototype.$save = function () {
+          if (!this.id) {
+            return this.$create();
+          } else {
+            return this.$update();
+          }
+        };
 
         angular.extend(ResourceClass, {
 
