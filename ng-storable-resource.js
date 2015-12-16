@@ -171,7 +171,8 @@ angular.module('ngStorableResource', ['ngResource', 'LocalStorageModule'])
 
         }, instanceMethods);
 
-        var propNames = [].concat(Object.getOwnPropertyNames(ResourceClass)).concat(Object.getOwnPropertyNames(actions));
+        var propNames = [].concat(Object.keys(ResourceClass)).concat(Object.keys(actions));
+
         _.each(propNames, function (propName) {
 
           if ('bind' == propName) return;
